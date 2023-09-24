@@ -71,7 +71,7 @@ public class PlayerSneakListener extends ViaBukkitListener {
 
 
         // From 1.9 upwards the server hitbox is set in every entity tick, so we have to reset it everytime
-        if (Via.getAPI().getServerVersion().lowestSupportedVersion() >= ProtocolVersion.v1_9.getVersion()) {
+        if (Via.getAPI().getServerVersion().lowestSupportedProtocolVersion().higherThan(ProtocolVersion.v1_8)) {
             sneaking = new WeakHashMap<>();
             useCache = true;
             plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {

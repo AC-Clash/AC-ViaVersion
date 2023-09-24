@@ -33,19 +33,19 @@ import java.util.Set;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
-public class ProtocolVersion {
+public class ProtocolVersion implements Comparable<ProtocolVersion> {
+
+    // These need to be at the top of the class to be initialized first
     private static final Int2ObjectMap<ProtocolVersion> VERSIONS = new Int2ObjectOpenHashMap<>();
     private static final List<ProtocolVersion> VERSION_LIST = new ArrayList<>();
 
-    // Before the Netty rewrite
-    public static final ProtocolVersion v1_4_6 = register(51, "1.4.6/7", new VersionRange("1.4", 6, 7));
-    public static final ProtocolVersion v1_5_1 = register(60, "1.5/1.5.1", new VersionRange("1.5", 0, 1));
-    public static final ProtocolVersion v1_5_2 = register(61, "1.5.2");
-    public static final ProtocolVersion v_1_6_1 = register(73, "1.6.1");
-    public static final ProtocolVersion v_1_6_2 = register(74, "1.6.2");
-    public static final ProtocolVersion v_1_6_3 = register(77, "1.6.3");
-    public static final ProtocolVersion v_1_6_4 = register(78, "1.6.4");
-    // After the Netty rewrite
+    public static final ProtocolVersion v1_4_6 = register(VersionType.RELEASE_INITIAL, 51, "1.4.6/7", new VersionRange("1.4", 6, 7));
+    public static final ProtocolVersion v1_5_1 = register(VersionType.RELEASE_INITIAL, 60, "1.5/1.5.1", new VersionRange("1.5", 0, 1));
+    public static final ProtocolVersion v1_5_2 = register(VersionType.RELEASE_INITIAL, 61, "1.5.2");
+    public static final ProtocolVersion v_1_6_1 = register(VersionType.RELEASE_INITIAL, 73, "1.6.1");
+    public static final ProtocolVersion v_1_6_2 = register(VersionType.RELEASE_INITIAL, 74, "1.6.2");
+    public static final ProtocolVersion v_1_6_3 = register(VersionType.RELEASE_INITIAL, 77, "1.6.3");
+    public static final ProtocolVersion v_1_6_4 = register(VersionType.RELEASE_INITIAL, 78, "1.6.4");
     public static final ProtocolVersion v1_7_1 = register(4, "1.7.2-1.7.5", new VersionRange("1.7", 2, 5));
     public static final ProtocolVersion v1_7_6 = register(5, "1.7.6-1.7.10", new VersionRange("1.7", 6, 10));
     public static final ProtocolVersion v1_8 = register(47, "1.8.x");
@@ -100,6 +100,18 @@ public class ProtocolVersion {
         return register(version, -1, name, versionRange);
     }
 
+    public static ProtocolVersion register(int version, int snapshotVersion, String name, @Nullable VersionRange versionRange) {
+        return register(VersionType.RELEASE, version, snapshotVersion, name, versionRange);
+    }
+
+    public static ProtocolVersion register(VersionType versionType, int version, String name) {
+        return register(versionType, version, -1, name, null);
+    }
+
+    public static ProtocolVersion register(VersionType versionType, int version, String name, @Nullable VersionRange versionRange) {
+        return register(versionType, version, -1, name, versionRange);
+    }
+
     /**
      * Registers a protocol version.
      *
@@ -109,8 +121,8 @@ public class ProtocolVersion {
      * @param versionRange    range of versions that are supported by this protocol version, null if not a range
      * @return registered ProtocolVersion
      */
-    public static ProtocolVersion register(int version, int snapshotVersion, String name, @Nullable VersionRange versionRange) {
-        ProtocolVersion protocol = new ProtocolVersion(version, snapshotVersion, name, versionRange);
+    public static ProtocolVersion register(VersionType versionType, int version, int snapshotVersion, String name, @Nullable VersionRange versionRange) {
+        ProtocolVersion protocol = new ProtocolVersion(versionType, version, snapshotVersion, name, versionRange);
         VERSION_LIST.add(protocol);
         VERSIONS.put(protocol.getVersion(), protocol);
         if (protocol.isSnapshot()) {
@@ -192,6 +204,7 @@ public class ProtocolVersion {
         return null;
     }
 
+    private final VersionType versionType;
     private final int version;
     private final int snapshotVersion;
     private final String name;
@@ -206,13 +219,22 @@ public class ProtocolVersion {
         this(version, -1, name, null);
     }
 
+    @Deprecated/*(forRemoval = true)*/
+    public ProtocolVersion(int version, int snapshotVersion, String name, @Nullable VersionRange versionRange) {
+        this(VersionType.RELEASE, version, snapshotVersion, name, versionRange);
+    }
+
     /**
+     * Constructs a new ProtocolVersion instance.
+     *
+     * @param versionType     protocol version type
      * @param version         protocol version
      * @param snapshotVersion actual snapshot protocol version, -1 if not a snapshot
      * @param name            version name
      * @param versionRange    range of versions that are supported by this protocol version, null if not a range
      */
-    public ProtocolVersion(int version, int snapshotVersion, String name, @Nullable VersionRange versionRange) {
+    public ProtocolVersion(VersionType versionType, int version, int snapshotVersion, String name, @Nullable VersionRange versionRange) {
+        this.versionType = versionType;
         this.version = version;
         this.snapshotVersion = snapshotVersion;
         this.name = name;
@@ -231,6 +253,16 @@ public class ProtocolVersion {
         } else {
             includedVersions = Collections.singleton(name);
         }
+    }
+
+    /**
+     * Returns the type of version (excluding whether it is a snapshot).
+     *
+     * @return version type
+     * @see #isSnapshot()
+     */
+    public VersionType getVersionType() {
+        return versionType;
     }
 
     /**
@@ -333,22 +365,54 @@ public class ProtocolVersion {
         return snapshotVersion != -1;
     }
 
+    /**
+     * Returns whether this protocol version is higher than the other protocol version.
+     *
+     * @param other other protocol version
+     * @return true if this protocol version is higher than the other protocol version
+     */
+    public boolean higherThan(final ProtocolVersion other) {
+        return this.compareTo(other) > 0;
+    }
+
+    /**
+     * Returns whether this protocol version is lower than the other protocol version.
+     *
+     * @param other other protocol version
+     * @return true if this protocol version is lower than the other protocol version
+     */
+    public boolean lowerThan(final ProtocolVersion other) {
+        return this.compareTo(other) < 0;
+    }
+
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        ProtocolVersion that = (ProtocolVersion) o;
-        return version == that.version;
+        final ProtocolVersion that = (ProtocolVersion) o;
+        return version == that.version && versionType == that.versionType && snapshotVersion == that.snapshotVersion;
     }
 
     @Override
     public int hashCode() {
-        return version;
+        int result = versionType.hashCode();
+        result = 31 * result + version;
+        result = 31 * result + snapshotVersion;
+        return result;
     }
 
     @Override
     public String toString() {
         return String.format("%s (%d)", this.name, this.version);
+    }
+
+    @Override
+    public int compareTo(final ProtocolVersion other) {
+        if (this.versionType != other.versionType) {
+            // Compare by version type first since version ids have reset multiple times
+            return Integer.compare(this.versionType.ordinal(), other.versionType.ordinal());
+        }
+        return Integer.compare(this.version, other.version);
     }
 }

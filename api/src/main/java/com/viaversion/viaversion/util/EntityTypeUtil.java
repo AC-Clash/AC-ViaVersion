@@ -24,8 +24,8 @@ package com.viaversion.viaversion.util;
 
 import com.google.common.base.Preconditions;
 import com.viaversion.viaversion.api.Via;
+import com.viaversion.viaversion.api.data.MappingData;
 import com.viaversion.viaversion.api.minecraft.entities.EntityType;
-import com.viaversion.viaversion.api.protocol.Protocol;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -61,13 +61,13 @@ public final class EntityTypeUtil {
      * @param idSetter    function to set the internal entity id
      * @param <T>         entity type
      */
-    public static <T extends EntityType> void initialize(final T[] values, final EntityType[] typesToFill, final Protocol<?, ?, ?, ?> protocol, final EntityIdSetter<T> idSetter) {
+    public static <T extends EntityType> void initialize(final T[] values, final EntityType[] typesToFill, final MappingData mappingData, final EntityIdSetter<T> idSetter) {
         for (final T type : values) {
             if (type.isAbstractType()) {
                 continue;
             }
 
-            final int id = protocol.getMappingData().getEntityMappings().mappedId(type.identifier());
+            final int id = mappingData.getEntityMappings().mappedId(type.identifier());
             Preconditions.checkArgument(id != -1, "Entity type %s has no id", type.identifier());
             idSetter.setId(type, id);
             typesToFill[id] = type;

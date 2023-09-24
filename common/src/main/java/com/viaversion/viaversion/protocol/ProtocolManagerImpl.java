@@ -25,6 +25,7 @@ import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.api.data.MappingDataLoader;
 import com.viaversion.viaversion.api.protocol.Protocol;
+import com.viaversion.viaversion.api.protocol.ProtocolLoadingIntention;
 import com.viaversion.viaversion.api.protocol.ProtocolManager;
 import com.viaversion.viaversion.api.protocol.ProtocolPathEntry;
 import com.viaversion.viaversion.api.protocol.ProtocolPathKey;
@@ -82,9 +83,6 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectSortedMap;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import us.myles.ViaVersion.api.protocol.ProtocolRegistry;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -105,6 +103,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import us.myles.ViaVersion.api.protocol.ProtocolRegistry;
 
 public class ProtocolManagerImpl implements ProtocolManager {
     private static final Protocol BASE_PROTOCOL = new BaseProtocol();
@@ -122,6 +122,7 @@ public class ProtocolManagerImpl implements ProtocolManager {
     private boolean mappingsLoaded;
 
     private ServerProtocolVersion serverProtocolVersion = new ServerProtocolVersionSingleton(-1);
+    private ProtocolLoadingIntention protocolLoadingIntention = ProtocolLoadingIntention.ALL;
     private int maxPathDeltaIncrease; // Only allow lowering path entries by default
     private int maxProtocolPathSize = 50;
 
@@ -188,11 +189,28 @@ public class ProtocolManagerImpl implements ProtocolManager {
 
     @Override
     public void registerProtocol(Protocol protocol, ProtocolVersion clientVersion, ProtocolVersion serverVersion) {
-        registerProtocol(protocol, Collections.singletonList(clientVersion.getVersion()), serverVersion.getVersion());
+        if (!protocolLoadingIntention.shouldBeLoaded(protocol, clientVersion, serverVersion)) {
+            Via.getPlatform().getLogger().fine("Not loading " + protocol.getClass().getSimpleName() + " as per protocol loading intention.");
+            return;
+        }
+
+        registerProtocol0(protocol, Collections.singletonList(clientVersion.getVersion()), serverVersion.getVersion());
     }
 
     @Override
     public void registerProtocol(Protocol protocol, List<Integer> supportedClientVersion, int serverVersion) {
+        final ProtocolVersion serverProtocolVersion = ProtocolVersion.getProtocol(serverVersion);
+        if (serverProtocolVersion != ProtocolVersion.unknown && supportedClientVersion.stream().map(ProtocolVersion::getProtocol)
+                .noneMatch(clientProtocolVersion -> clientProtocolVersion == ProtocolVersion.unknown
+                        || protocolLoadingIntention.shouldBeLoaded(protocol, clientProtocolVersion, serverProtocolVersion))) {
+            Via.getPlatform().getLogger().fine("Not loading " + protocol.getClass().getSimpleName() + " as per protocol loading intention.");
+            return;
+        }
+
+        registerProtocol0(protocol, supportedClientVersion, serverVersion);
+    }
+
+    private void registerProtocol0(Protocol protocol, List<Integer> supportedClientVersion, int serverVersion) {
         // Register the protocol's handlers
         protocol.initialize();
 
@@ -245,7 +263,9 @@ public class ProtocolManagerImpl implements ProtocolManager {
         supportedVersions.add(serverProtocolVersion.lowestSupportedVersion());
         for (ProtocolVersion version : ProtocolVersion.getProtocols()) {
             List<ProtocolPathEntry> protocolPath = getProtocolPath(version.getVersion(), serverProtocolVersion.lowestSupportedVersion());
-            if (protocolPath == null) continue;
+            if (protocolPath == null) {
+                continue;
+            }
 
             supportedVersions.add(version.getVersion());
             for (ProtocolPathEntry pathEntry : protocolPath) {
@@ -401,6 +421,17 @@ public class ProtocolManagerImpl implements ProtocolManager {
     @Override
     public int getMaxPathDeltaIncrease() {
         return maxPathDeltaIncrease;
+    }
+
+    @Override
+    public ProtocolLoadingIntention getProtocolLoadingIntention() {
+        return protocolLoadingIntention;
+    }
+
+    @Override
+    public void setProtocolLoadingIntention(final ProtocolLoadingIntention protocolLoadingIntention) {
+        Preconditions.checkNotNull(protocolLoadingIntention);
+        this.protocolLoadingIntention = protocolLoadingIntention;
     }
 
     @Override

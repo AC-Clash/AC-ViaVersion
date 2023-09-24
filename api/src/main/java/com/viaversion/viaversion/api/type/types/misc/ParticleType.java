@@ -23,9 +23,9 @@
 package com.viaversion.viaversion.api.type.types.misc;
 
 import com.viaversion.viaversion.api.Via;
+import com.viaversion.viaversion.api.data.MappingData;
 import com.viaversion.viaversion.api.data.ParticleMappings;
 import com.viaversion.viaversion.api.minecraft.item.Item;
-import com.viaversion.viaversion.api.protocol.Protocol;
 import com.viaversion.viaversion.api.type.Type;
 import com.viaversion.viaversion.api.minecraft.Particle;
 import com.viaversion.viaversion.util.Key;
@@ -46,12 +46,12 @@ public class ParticleType extends Type<Particle> {
         this(new Int2ObjectArrayMap<>());
     }
 
-    public ParticleTypeFiller filler(final Protocol<?, ?, ?, ?> protocol) {
-        return filler(protocol, true);
+    public ParticleTypeFiller filler(final MappingData mappingData) {
+        return filler(mappingData, true);
     }
 
-    public ParticleTypeFiller filler(final Protocol<?, ?, ?, ?> protocol, final boolean useMappedNames) {
-        return new ParticleTypeFiller(protocol, useMappedNames);
+    public ParticleTypeFiller filler(final MappingData mappingData, final boolean useMappedNames) {
+        return new ParticleTypeFiller(mappingData, useMappedNames);
     }
 
     @Override
@@ -64,6 +64,10 @@ public class ParticleType extends Type<Particle> {
 
     @Override
     public Particle read(final ByteBuf buffer) throws Exception {
+        if (readers.isEmpty()) {
+            throw new IllegalStateException("No particle readers registered - missing DataFillers intent?");
+        }
+
         final int type = Type.VAR_INT.readPrimitive(buffer);
         final Particle particle = new Particle(type);
 
@@ -144,8 +148,8 @@ public class ParticleType extends Type<Particle> {
         private final ParticleMappings mappings;
         private final boolean useMappedNames;
 
-        private ParticleTypeFiller(final Protocol<?, ?, ?, ?> protocol, final boolean useMappedNames) {
-            this.mappings = protocol.getMappingData().getParticleMappings();
+        private ParticleTypeFiller(final MappingData mappingData, final boolean useMappedNames) {
+            this.mappings = mappingData.getParticleMappings();
             this.useMappedNames = useMappedNames;
         }
 

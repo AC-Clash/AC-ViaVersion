@@ -31,8 +31,24 @@ public interface MappingData {
 
     /**
      * Loads the mapping data.
+     *
+     * @throws IllegalArgumentException if the mapping data is already loaded
      */
     void load();
+
+    /**
+     * Unloads the mapping data. This might not unload all additional data depending on the implementation.
+     *
+     * @throws IllegalArgumentException if the mapping data is already unloaded or has not been loaded yet
+     */
+    void unload();
+
+    /**
+     * Returns whether the mapping data is loaded.
+     *
+     * @return true if the mapping data is loaded
+     */
+    boolean isLoaded();
 
     /**
      * Returns the mapped block state id, or -1 if unmapped.

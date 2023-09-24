@@ -24,6 +24,7 @@ import com.viaversion.viaversion.api.connection.ProtocolInfo;
 import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.api.data.MappingData;
 import com.viaversion.viaversion.api.data.MappingDataBase;
+import com.viaversion.viaversion.api.data.shared.DataFillers;
 import com.viaversion.viaversion.api.minecraft.entities.EntityTypes1_19_4;
 import com.viaversion.viaversion.api.protocol.AbstractProtocol;
 import com.viaversion.viaversion.api.protocol.packet.Direction;
@@ -33,6 +34,8 @@ import com.viaversion.viaversion.api.protocol.remapper.PacketHandler;
 import com.viaversion.viaversion.api.rewriter.EntityRewriter;
 import com.viaversion.viaversion.api.rewriter.ItemRewriter;
 import com.viaversion.viaversion.api.type.Type;
+import com.viaversion.viaversion.api.type.types.version.Types1_20;
+import com.viaversion.viaversion.api.type.types.version.Types1_20_2;
 import com.viaversion.viaversion.data.entity.EntityTrackerBase;
 import com.viaversion.viaversion.exception.CancelException;
 import com.viaversion.viaversion.protocols.base.ClientboundLoginPackets;
@@ -318,6 +321,13 @@ public final class Protocol1_20_2To1_20 extends AbstractProtocol<ClientboundPack
         finishConfigurationPacket.send(Protocol1_20_2To1_20.class);
 
         protocolInfo.setServerState(State.PLAY);
+    }
+
+    @Override
+    protected void registerIntents(final DataFillers dataFillers) {
+        dataFillers.registerIntent(Entity1_19_4Types.class);
+        dataFillers.registerIntent(Types1_20.class);
+        // Types1_20_2 re-uses the Types1_20 particle type
     }
 
     @Override

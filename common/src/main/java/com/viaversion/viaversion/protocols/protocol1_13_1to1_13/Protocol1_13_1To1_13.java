@@ -20,6 +20,7 @@ package com.viaversion.viaversion.protocols.protocol1_13_1to1_13;
 import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.api.data.MappingData;
 import com.viaversion.viaversion.api.data.MappingDataBase;
+import com.viaversion.viaversion.api.data.shared.DataFillers;
 import com.viaversion.viaversion.api.minecraft.RegistryType;
 import com.viaversion.viaversion.api.minecraft.entities.EntityTypes1_13;
 import com.viaversion.viaversion.api.minecraft.item.Item;
@@ -28,6 +29,7 @@ import com.viaversion.viaversion.api.protocol.packet.PacketWrapper;
 import com.viaversion.viaversion.api.protocol.remapper.PacketHandlers;
 import com.viaversion.viaversion.api.protocol.remapper.ValueTransformer;
 import com.viaversion.viaversion.api.type.Type;
+import com.viaversion.viaversion.api.type.types.version.Types1_13;
 import com.viaversion.viaversion.data.entity.EntityTrackerBase;
 import com.viaversion.viaversion.protocols.protocol1_13_1to1_13.metadata.MetadataRewriter1_13_1To1_13;
 import com.viaversion.viaversion.protocols.protocol1_13_1to1_13.packets.EntityPackets;
@@ -131,6 +133,11 @@ public class Protocol1_13_1To1_13 extends AbstractProtocol<ClientboundPackets1_1
 
         new TagRewriter<>(this).register(ClientboundPackets1_13.TAGS, RegistryType.ITEM);
         new StatisticsRewriter<>(this).register(ClientboundPackets1_13.STATISTICS);
+    }
+
+    @Override
+    protected void registerIntents(final DataFillers dataFillers) {
+        dataFillers.registerIntent(Types1_13.class);
     }
 
     @Override

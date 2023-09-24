@@ -26,6 +26,7 @@ import com.google.common.base.Preconditions;
 import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.api.data.entity.EntityTracker;
+import com.viaversion.viaversion.api.data.shared.DataFillers;
 import com.viaversion.viaversion.api.protocol.packet.ClientboundPacketType;
 import com.viaversion.viaversion.api.protocol.packet.Direction;
 import com.viaversion.viaversion.api.protocol.packet.PacketType;
@@ -88,6 +89,10 @@ public abstract class AbstractProtocol<CU extends ClientboundPacketType, CM exte
         this.packetTypesProvider = createPacketTypesProvider();
         this.clientboundMappings = createClientboundPacketMappings();
         this.serverboundMappings = createServerboundPacketMappings();
+
+        if (!isBaseProtocol()) {
+            registerDataInitializers(Via.getManager().getDataFillers());
+        }
     }
 
     @Override
@@ -95,6 +100,7 @@ public abstract class AbstractProtocol<CU extends ClientboundPacketType, CM exte
         Preconditions.checkArgument(!initialized, "Protocol has already been initialized");
         initialized = true;
 
+        registerIntents(Via.getManager().getDataFillers());
         registerPackets();
         registerConfigurationChangeHandlers();
 
@@ -183,6 +189,24 @@ public abstract class AbstractProtocol<CU extends ClientboundPacketType, CM exte
     protected void registerPackets() {
         callRegister(getEntityRewriter());
         callRegister(getItemRewriter());
+    }
+
+    /**
+     * Called before protocol initialization to register data fillers for shared mapping data.
+     *
+     * @param dataFillers data fillers
+     * @see #registerIntents(DataFillers)
+     */
+    protected void registerDataInitializers(final DataFillers dataFillers) {
+    }
+
+    /**
+     * Called during protocol initialization to register intents for shared mapping data.
+     *
+     * @param dataFillers data fillers
+     * @see #registerDataInitializers(DataFillers)
+     */
+    protected void registerIntents(final DataFillers dataFillers) {
     }
 
     /**

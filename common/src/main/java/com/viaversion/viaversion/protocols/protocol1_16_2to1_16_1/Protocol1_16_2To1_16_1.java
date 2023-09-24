@@ -18,10 +18,12 @@
 package com.viaversion.viaversion.protocols.protocol1_16_2to1_16_1;
 
 import com.viaversion.viaversion.api.connection.UserConnection;
+import com.viaversion.viaversion.api.data.shared.DataFillers;
 import com.viaversion.viaversion.api.minecraft.RegistryType;
 import com.viaversion.viaversion.api.minecraft.entities.EntityTypes1_16_2;
 import com.viaversion.viaversion.api.protocol.AbstractProtocol;
 import com.viaversion.viaversion.api.type.Type;
+import com.viaversion.viaversion.api.type.types.version.Types1_16;
 import com.viaversion.viaversion.data.entity.EntityTrackerBase;
 import com.viaversion.viaversion.protocols.protocol1_16_2to1_16_1.data.MappingData;
 import com.viaversion.viaversion.protocols.protocol1_16_2to1_16_1.metadata.MetadataRewriter1_16_2To1_16_1;
@@ -82,6 +84,11 @@ public class Protocol1_16_2To1_16_1 extends AbstractProtocol<ClientboundPackets1
             wrapper.write(Type.VAR_INT, 0); // Shown
             wrapper.write(Type.STRING, recipe);
         });
+    }
+
+    @Override
+    protected void registerIntents(final DataFillers dataFillers) {
+        dataFillers.registerIntent(Types1_16.class);
     }
 
     @Override

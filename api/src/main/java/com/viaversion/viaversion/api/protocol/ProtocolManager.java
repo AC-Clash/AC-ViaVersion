@@ -215,6 +215,24 @@ public interface ProtocolManager {
      */
     int getMaxPathDeltaIncrease();
 
+    /**
+     * Returns the protocol loading intention.
+     * Loads all protocols by default, but platform implementation may differ.
+     *
+     * @return the protocol loading intention
+     */
+    ProtocolLoadingIntention getProtocolLoadingIntention();
+
+    /**
+     * Sets the protocol loading intention, determining which protocols will be created and loaded.
+     * <p>
+     * Note: Even if a protocol is eplicitly excluded by the intention, it may still be loaded if
+     * another protocol depends on its data.
+     *
+     * @param protocolLoadingIntention the protocol loading intention
+     */
+    void setProtocolLoadingIntention(ProtocolLoadingIntention protocolLoadingIntention);
+
     @Deprecated/*(forRemoval = true)*/
     default void setOnlyCheckLoweringPathEntries(final boolean onlyCheckLoweringPathEntries) {
         setMaxPathDeltaIncrease(onlyCheckLoweringPathEntries ? 0 : -1);

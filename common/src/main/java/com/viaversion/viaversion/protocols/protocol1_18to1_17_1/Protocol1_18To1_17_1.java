@@ -17,13 +17,16 @@
  */
 package com.viaversion.viaversion.protocols.protocol1_18to1_17_1;
 
+import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.connection.UserConnection;
+import com.viaversion.viaversion.api.data.shared.DataFillers;
 import com.viaversion.viaversion.api.minecraft.RegistryType;
 import com.viaversion.viaversion.api.minecraft.entities.EntityTypes1_17;
 import com.viaversion.viaversion.api.protocol.AbstractProtocol;
 import com.viaversion.viaversion.api.protocol.remapper.PacketHandlers;
 import com.viaversion.viaversion.api.type.Type;
 import com.viaversion.viaversion.api.type.types.misc.ParticleType;
+import com.viaversion.viaversion.api.type.types.version.Types1_17;
 import com.viaversion.viaversion.api.type.types.version.Types1_18;
 import com.viaversion.viaversion.data.entity.EntityTrackerBase;
 import com.viaversion.viaversion.protocols.protocol1_17_1to1_17.ClientboundPackets1_17_1;
@@ -83,15 +86,26 @@ public final class Protocol1_18To1_17_1 extends AbstractProtocol<ClientboundPack
     }
 
     @Override
-    protected void onMappingDataLoaded() {
-        Types1_18.PARTICLE.filler(this)
+    protected void registerDataInitializers(final DataFillers dataFillers) {
+        dataFillers.register(Types1_18.class, MAPPINGS, () -> Types1_18.PARTICLE.filler(MAPPINGS)
                 .reader("block", ParticleType.Readers.BLOCK)
                 .reader("block_marker", ParticleType.Readers.BLOCK)
                 .reader("dust", ParticleType.Readers.DUST)
                 .reader("falling_dust", ParticleType.Readers.BLOCK)
                 .reader("dust_color_transition", ParticleType.Readers.DUST_TRANSITION)
                 .reader("item", ParticleType.Readers.VAR_INT_ITEM)
-                .reader("vibration", ParticleType.Readers.VIBRATION);
+                .reader("vibration", ParticleType.Readers.VIBRATION));
+    }
+
+    @Override
+    protected void registerIntents(final DataFillers dataFillers) {
+        dataFillers.registerIntent(Types1_17.class);
+        dataFillers.registerIntent(Types1_18.class);
+    }
+
+    @Override
+    protected void onMappingDataLoaded() {
+        Via.getManager().getDataFillers().initialize(Types1_18.class);
     }
 
     @Override

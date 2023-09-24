@@ -21,6 +21,7 @@ import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.api.data.MappingData;
 import com.viaversion.viaversion.api.data.MappingDataBase;
+import com.viaversion.viaversion.api.data.shared.DataFillers;
 import com.viaversion.viaversion.api.minecraft.RegistryType;
 import com.viaversion.viaversion.api.minecraft.entities.EntityTypes1_17;
 import com.viaversion.viaversion.api.protocol.AbstractProtocol;
@@ -28,6 +29,7 @@ import com.viaversion.viaversion.api.protocol.packet.ClientboundPacketType;
 import com.viaversion.viaversion.api.protocol.remapper.PacketHandlers;
 import com.viaversion.viaversion.api.type.Type;
 import com.viaversion.viaversion.api.type.types.misc.ParticleType;
+import com.viaversion.viaversion.api.type.types.version.Types1_16;
 import com.viaversion.viaversion.api.type.types.version.Types1_17;
 import com.viaversion.viaversion.data.entity.EntityTrackerBase;
 import com.viaversion.viaversion.protocols.protocol1_16_2to1_16_1.ClientboundPackets1_16_2;
@@ -187,6 +189,23 @@ public final class Protocol1_17To1_16_4 extends AbstractProtocol<ClientboundPack
     }
 
     @Override
+    protected void registerDataInitializers(final DataFillers dataFillers) {
+        dataFillers.register(Types1_17.class, MAPPINGS, () -> Types1_17.PARTICLE.filler(MAPPINGS)
+                .reader("block", ParticleType.Readers.BLOCK)
+                .reader("dust", ParticleType.Readers.DUST)
+                .reader("falling_dust", ParticleType.Readers.BLOCK)
+                .reader("dust_color_transition", ParticleType.Readers.DUST_TRANSITION)
+                .reader("item", ParticleType.Readers.VAR_INT_ITEM)
+                .reader("vibration", ParticleType.Readers.VIBRATION));
+    }
+
+    @Override
+    protected void registerIntents(final DataFillers dataFillers) {
+        dataFillers.registerIntent(Types1_16.class);
+        dataFillers.registerIntent(Types1_17.class);
+    }
+
+    @Override
     protected void onMappingDataLoaded() {
         tagRewriter.loadFromMappingData(); // Load filled extra tags
 
@@ -203,13 +222,7 @@ public final class Protocol1_17To1_16_4 extends AbstractProtocol<ClientboundPack
         tagRewriter.addEmptyTags(RegistryType.ENTITY, "minecraft:powder_snow_walkable_mobs", "minecraft:axolotl_always_hostiles", "minecraft:axolotl_tempted_hostiles",
                 "minecraft:axolotl_hunt_targets", "minecraft:freeze_hurts_extra_types", "minecraft:freeze_immune_entity_types");
 
-        Types1_17.PARTICLE.filler(this)
-                .reader("block", ParticleType.Readers.BLOCK)
-                .reader("dust", ParticleType.Readers.DUST)
-                .reader("falling_dust", ParticleType.Readers.BLOCK)
-                .reader("dust_color_transition", ParticleType.Readers.DUST_TRANSITION)
-                .reader("item", ParticleType.Readers.VAR_INT_ITEM)
-                .reader("vibration", ParticleType.Readers.VIBRATION);
+        Via.getManager().getDataFillers().initialize(Types1_17.class);
     }
 
     @Override

@@ -24,6 +24,8 @@ import com.viaversion.viaversion.api.command.ViaCommandSender;
 import com.viaversion.viaversion.api.platform.PlatformTask;
 import com.viaversion.viaversion.api.platform.UnsupportedSoftware;
 import com.viaversion.viaversion.api.platform.ViaPlatform;
+import com.viaversion.viaversion.api.protocol.ProtocolLoadingIntention;
+import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 import com.viaversion.viaversion.bukkit.commands.BukkitCommandHandler;
 import com.viaversion.viaversion.bukkit.commands.BukkitCommandSender;
 import com.viaversion.viaversion.bukkit.listeners.JoinListener;
@@ -69,13 +71,21 @@ public class ViaVersionPlugin extends JavaPlugin implements ViaPlatform<Player> 
         commandHandler = new BukkitCommandHandler();
 
         // Init platform
-        BukkitViaInjector injector = new BukkitViaInjector();
+        final BukkitViaInjector injector = new BukkitViaInjector();
         Via.init(ViaManagerImpl.builder()
                 .platform(this)
                 .commandHandler(commandHandler)
                 .injector(injector)
                 .loader(new BukkitViaLoader(this))
                 .build());
+
+        final int serverProtocolVersion;
+        if (PaperViaInjector.PAPER_PROTOCOL_METHOD
+                && ProtocolVersion.isRegistered(serverProtocolVersion = PaperViaInjector.getServerProtocolVersion())) {
+            // Only load the protocols that are necessary for the server version (if not changed again by another plugin)
+            final ProtocolVersion protocol = ProtocolVersion.getProtocol(serverProtocolVersion);
+            Via.getManager().getProtocolManager().setProtocolLoadingIntention(ProtocolLoadingIntention.forServerVersion(protocol));
+        }
 
         // Config magic
         conf = new BukkitViaConfig();

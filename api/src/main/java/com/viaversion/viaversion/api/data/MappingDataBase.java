@@ -26,6 +26,7 @@ import com.github.steveice10.opennbt.tag.builtin.CompoundTag;
 import com.github.steveice10.opennbt.tag.builtin.IntArrayTag;
 import com.github.steveice10.opennbt.tag.builtin.ListTag;
 import com.github.steveice10.opennbt.tag.builtin.Tag;
+import com.google.common.base.Preconditions;
 import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.minecraft.RegistryType;
 import com.viaversion.viaversion.api.minecraft.TagData;
@@ -54,6 +55,7 @@ public class MappingDataBase implements MappingData {
     protected Mappings paintingMappings;
     protected Mappings menuMappings;
     protected Map<RegistryType, List<TagData>> tags;
+    private boolean loaded;
 
     public MappingDataBase(final String unmappedVersion, final String mappedVersion) {
         this.unmappedVersion = unmappedVersion;
@@ -62,6 +64,7 @@ public class MappingDataBase implements MappingData {
 
     @Override
     public void load() {
+        Preconditions.checkArgument(!loaded, "Mapping data already loaded");
         if (Via.getManager().isDebug()) {
             getLogger().info("Loading " + unmappedVersion + " -> " + mappedVersion + " mappings...");
         }
@@ -105,6 +108,31 @@ public class MappingDataBase implements MappingData {
         }
 
         loadExtras(data);
+        loaded = true;
+    }
+
+    @Override
+    public void unload() {
+        Preconditions.checkArgument(loaded, "Mapping data not loaded");
+        itemMappings = null;
+        argumentTypeMappings = null;
+        entityMappings = null;
+        particleMappings = null;
+        blockMappings = null;
+        blockStateMappings = null;
+        blockEntityMappings = null;
+        soundMappings = null;
+        statisticsMappings = null;
+        menuMappings = null;
+        enchantmentMappings = null;
+        paintingMappings = null;
+        tags = null;
+        loaded = false;
+    }
+
+    @Override
+    public boolean isLoaded() {
+        return loaded;
     }
 
     protected @Nullable CompoundTag readNBTFile(final String name) {

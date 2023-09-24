@@ -23,7 +23,7 @@
 package com.viaversion.viaversion.api.minecraft.entities;
 
 import com.google.common.base.Preconditions;
-import com.viaversion.viaversion.api.protocol.Protocol;
+import com.viaversion.viaversion.api.data.MappingData;
 import com.viaversion.viaversion.util.EntityTypeUtil;
 import java.util.Locale;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -267,7 +267,7 @@ public enum EntityTypes1_19 implements EntityType {
         return EntityTypeUtil.getTypeFromId(TYPES, typeId, ENTITY);
     }
 
-    public static void initialize(final Protocol<?, ?, ?, ?> protocol) {
-        EntityTypeUtil.initialize(values(), TYPES, protocol, (type, id) -> type.id = id);
+    public static void initialize(final MappingData mappingData) {
+        EntityTypeUtil.initialize(values(), TYPES, mappingData, (type, id) -> type.id = id);
     }
 }

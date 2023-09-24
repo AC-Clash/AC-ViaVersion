@@ -23,6 +23,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.connection.UserConnection;
+import com.viaversion.viaversion.api.data.shared.DataFillers;
 import com.viaversion.viaversion.api.minecraft.Position;
 import com.viaversion.viaversion.api.minecraft.entities.EntityTypes1_13;
 import com.viaversion.viaversion.api.minecraft.item.DataItem;
@@ -846,16 +847,26 @@ public class Protocol1_13To1_12_2 extends AbstractProtocol<ClientboundPackets1_1
     }
 
     @Override
+    protected void registerDataInitializers(final DataFillers dataFillers) {
+        dataFillers.register(Types1_13.class, MAPPINGS, () -> Types1_13.PARTICLE.filler(MAPPINGS)
+                .reader(3, ParticleType.Readers.BLOCK)
+                .reader(20, ParticleType.Readers.DUST)
+                .reader(11, ParticleType.Readers.DUST)
+                .reader(27, ParticleType.Readers.ITEM));
+    }
+
+    @Override
+    protected void registerIntents(final DataFillers dataFillers) {
+        dataFillers.registerIntent(Types1_13.class);
+    }
+
+    @Override
     protected void onMappingDataLoaded() {
         ConnectionData.init();
         RecipeData.init();
         BlockIdData.init();
 
-        Types1_13.PARTICLE.filler(this)
-                .reader(3, ParticleType.Readers.BLOCK)
-                .reader(20, ParticleType.Readers.DUST)
-                .reader(11, ParticleType.Readers.DUST)
-                .reader(27, ParticleType.Readers.ITEM);
+        Via.getManager().getDataFillers().initialize(Types1_13.class);
 
         if (Via.getConfig().isServersideBlockConnections() && Via.getManager().getProviders().get(BlockConnectionProvider.class) instanceof PacketBlockConnectionProvider) {
             BlockConnectionStorage.init();

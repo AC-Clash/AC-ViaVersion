@@ -23,6 +23,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.connection.UserConnection;
+import com.viaversion.viaversion.api.data.shared.DataFillers;
 import com.viaversion.viaversion.api.minecraft.RegistryType;
 import com.viaversion.viaversion.api.minecraft.entities.EntityTypes1_16;
 import com.viaversion.viaversion.api.platform.providers.ViaProviders;
@@ -31,6 +32,7 @@ import com.viaversion.viaversion.api.protocol.packet.State;
 import com.viaversion.viaversion.api.protocol.remapper.PacketHandlers;
 import com.viaversion.viaversion.api.type.Type;
 import com.viaversion.viaversion.api.type.types.misc.ParticleType;
+import com.viaversion.viaversion.api.type.types.version.Types1_14;
 import com.viaversion.viaversion.api.type.types.version.Types1_16;
 import com.viaversion.viaversion.data.entity.EntityTrackerBase;
 import com.viaversion.viaversion.protocols.protocol1_14to1_13_2.ServerboundPackets1_14;
@@ -212,6 +214,21 @@ public class Protocol1_16To1_15_2 extends AbstractProtocol<ClientboundPackets1_1
     }
 
     @Override
+    protected void registerDataInitializers(final DataFillers dataFillers) {
+        dataFillers.register(Types1_16.class, MAPPINGS, () -> Types1_16.PARTICLE.filler(MAPPINGS)
+                .reader("block", ParticleType.Readers.BLOCK)
+                .reader("dust", ParticleType.Readers.DUST)
+                .reader("falling_dust", ParticleType.Readers.BLOCK)
+                .reader("item", ParticleType.Readers.VAR_INT_ITEM));
+    }
+
+    @Override
+    protected void registerIntents(final DataFillers dataFillers) {
+        dataFillers.registerIntent(Types1_14.class);
+        dataFillers.registerIntent(Types1_16.class);
+    }
+
+    @Override
     protected void onMappingDataLoaded() {
         int[] wallPostOverrideTag = new int[47];
         int arrayIndex = 0;
@@ -256,11 +273,7 @@ public class Protocol1_16To1_15_2 extends AbstractProtocol<ClientboundPackets1_1
         tagRewriter.addEmptyTags(RegistryType.ITEM, "minecraft:beds", "minecraft:coals", "minecraft:fences", "minecraft:flowers",
                 "minecraft:lectern_books", "minecraft:music_discs", "minecraft:small_flowers", "minecraft:tall_flowers", "minecraft:trapdoors", "minecraft:walls", "minecraft:wooden_fences");
 
-        Types1_16.PARTICLE.filler(this)
-                .reader("block", ParticleType.Readers.BLOCK)
-                .reader("dust", ParticleType.Readers.DUST)
-                .reader("falling_dust", ParticleType.Readers.BLOCK)
-                .reader("item", ParticleType.Readers.VAR_INT_ITEM);
+        Via.getManager().getDataFillers().initialize(Types1_16.class);
     }
 
     @Override
