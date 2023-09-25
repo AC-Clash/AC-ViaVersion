@@ -26,7 +26,6 @@ import com.google.common.annotations.Beta;
 import com.google.common.base.Preconditions;
 import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.api.data.MappingData;
-import com.viaversion.viaversion.api.data.shared.DataFillers;
 import com.viaversion.viaversion.api.platform.providers.ViaProviders;
 import com.viaversion.viaversion.api.protocol.packet.ClientboundPacketType;
 import com.viaversion.viaversion.api.protocol.packet.Direction;
@@ -281,6 +280,13 @@ public interface Protocol<CU extends ClientboundPacketType, CM extends Clientbou
      * @throws IllegalArgumentException if this method has already been called
      */
     void initialize();
+
+    /**
+     * Returns whether the protocol has been registered and initialized.
+     *
+     * @return whether the protocol has been registered and initialized
+     */
+    boolean isRegistered();
 
     /**
      * Returns true if this Protocol's {@link #loadMappingData()} method should be called.

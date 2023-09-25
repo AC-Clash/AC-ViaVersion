@@ -325,7 +325,7 @@ public final class Protocol1_20_2To1_20 extends AbstractProtocol<ClientboundPack
 
     @Override
     protected void registerIntents(final DataFillers dataFillers) {
-        dataFillers.registerIntent(Entity1_19_4Types.class);
+        dataFillers.registerIntent(EntityTypes1_19_4.class);
         dataFillers.registerIntent(Types1_20.class);
         // Types1_20_2 re-uses the Types1_20 particle type
     }

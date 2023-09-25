@@ -50,7 +50,6 @@ import com.viaversion.viaversion.rewriter.StatisticsRewriter;
 import com.viaversion.viaversion.rewriter.TagRewriter;
 import com.viaversion.viaversion.util.GsonUtil;
 import com.viaversion.viaversion.util.Key;
-
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -215,7 +214,7 @@ public class Protocol1_16To1_15_2 extends AbstractProtocol<ClientboundPackets1_1
 
     @Override
     protected void registerDataInitializers(final DataFillers dataFillers) {
-        dataFillers.register(Types1_16.class, MAPPINGS, () -> Types1_16.PARTICLE.filler(MAPPINGS)
+        dataFillers.register(Types1_16.class, this, () -> Types1_16.PARTICLE.filler(MAPPINGS)
                 .reader("block", ParticleType.Readers.BLOCK)
                 .reader("dust", ParticleType.Readers.DUST)
                 .reader("falling_dust", ParticleType.Readers.BLOCK)
@@ -230,6 +229,8 @@ public class Protocol1_16To1_15_2 extends AbstractProtocol<ClientboundPackets1_1
 
     @Override
     protected void onMappingDataLoaded() {
+        super.onMappingDataLoaded();
+
         int[] wallPostOverrideTag = new int[47];
         int arrayIndex = 0;
         wallPostOverrideTag[arrayIndex++] = 140;
@@ -272,8 +273,6 @@ public class Protocol1_16To1_15_2 extends AbstractProtocol<ClientboundPackets1_1
         tagRewriter.addEmptyTags(RegistryType.ENTITY, "minecraft:arrows", "minecraft:beehive_inhabitors", "minecraft:raiders", "minecraft:skeletons");
         tagRewriter.addEmptyTags(RegistryType.ITEM, "minecraft:beds", "minecraft:coals", "minecraft:fences", "minecraft:flowers",
                 "minecraft:lectern_books", "minecraft:music_discs", "minecraft:small_flowers", "minecraft:tall_flowers", "minecraft:trapdoors", "minecraft:walls", "minecraft:wooden_fences");
-
-        Via.getManager().getDataFillers().initialize(Types1_16.class);
     }
 
     @Override

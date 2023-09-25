@@ -201,8 +201,8 @@ public class ProtocolManagerImpl implements ProtocolManager {
     public void registerProtocol(Protocol protocol, List<Integer> supportedClientVersion, int serverVersion) {
         final ProtocolVersion serverProtocolVersion = ProtocolVersion.getProtocol(serverVersion);
         if (serverProtocolVersion != ProtocolVersion.unknown && supportedClientVersion.stream().map(ProtocolVersion::getProtocol)
-                .noneMatch(clientProtocolVersion -> clientProtocolVersion == ProtocolVersion.unknown
-                        || protocolLoadingIntention.shouldBeLoaded(protocol, clientProtocolVersion, serverProtocolVersion))) {
+                .noneMatch(clientProtocolVersion -> clientProtocolVersion != ProtocolVersion.unknown
+                        && protocolLoadingIntention.shouldBeLoaded(protocol, clientProtocolVersion, serverProtocolVersion))) {
             Via.getPlatform().getLogger().fine("Not loading " + protocol.getClass().getSimpleName() + " as per protocol loading intention.");
             return;
         }
@@ -451,7 +451,9 @@ public class ProtocolManagerImpl implements ProtocolManager {
 
     @Override
     public void completeMappingDataLoading(Class<? extends Protocol> protocolClass) throws Exception {
-        if (mappingsLoaded) return;
+        if (mappingsLoaded) {
+            return;
+        }
 
         CompletableFuture<Void> future = getMappingLoaderFuture(protocolClass);
         if (future != null) {
@@ -539,8 +541,9 @@ public class ProtocolManagerImpl implements ProtocolManager {
         mappingLoaderFutures.clear();
         mappingLoaderFutures = null;
 
-        // Clear cached mapping files
+        // Clear cached mapping files and data initializers
         MappingDataLoader.clearCache();
+        Via.getManager().getDataFillers().clear();
     }
 
     private Function<Throwable, Void> mappingLoaderThrowable(Class<? extends Protocol> protocolClass) {

@@ -22,6 +22,7 @@ import com.viaversion.viaversion.api.connection.ProtocolInfo;
 import com.viaversion.viaversion.api.platform.providers.ViaProviders;
 import com.viaversion.viaversion.api.protocol.AbstractProtocol;
 import com.viaversion.viaversion.api.protocol.Protocol;
+import com.viaversion.viaversion.api.protocol.ProtocolManager;
 import com.viaversion.viaversion.api.protocol.ProtocolPathEntry;
 import com.viaversion.viaversion.api.protocol.ProtocolPipeline;
 import com.viaversion.viaversion.api.protocol.packet.Direction;
@@ -59,18 +60,24 @@ public class BaseProtocol extends AbstractProtocol {
             List<ProtocolPathEntry> protocolPath = null;
 
             // Only allow newer clients (or 1.9.2 on 1.9.4 server if the server supports it)
+            ProtocolManager protocolManager = Via.getManager().getProtocolManager();
             if (info.getProtocolVersion() >= serverProtocol || Via.getPlatform().isOldClientsAllowed()) {
-                protocolPath = Via.getManager().getProtocolManager().getProtocolPath(info.getProtocolVersion(), serverProtocol);
+                protocolPath = protocolManager.getProtocolPath(info.getProtocolVersion(), serverProtocol);
             }
 
             ProtocolPipeline pipeline = wrapper.user().getProtocolInfo().getPipeline();
             if (protocolPath != null) {
                 List<Protocol> protocols = new ArrayList<>(protocolPath.size());
                 for (ProtocolPathEntry entry : protocolPath) {
-                    protocols.add(entry.protocol());
+                    Protocol<?, ?, ?, ?> protocol = entry.protocol();
+                    protocols.add(protocol);
 
                     // Ensure mapping data has already been loaded
-                    Via.getManager().getProtocolManager().completeMappingDataLoading(entry.protocol().getClass());
+                    protocolManager.completeMappingDataLoading(protocol.getClass());
+                    if (!Via.getManager().getDataFillers().initializedTypesForProtocol(protocol.getClass())) {
+                        // Complete data fillers initialization if required
+                        protocolManager.completeMappingDataLoading(BaseProtocol.class);
+                    }
                 }
 
                 // Add protocols to pipeline
@@ -82,7 +89,7 @@ public class BaseProtocol extends AbstractProtocol {
             }
 
             // Add Base Protocol
-            pipeline.add(Via.getManager().getProtocolManager().getBaseProtocol(serverProtocol));
+            pipeline.add(protocolManager.getBaseProtocol(serverProtocol));
 
             if (Via.getManager().isDebug()) {
                 Via.getPlatform().getLogger().info("User connected with protocol: " + info.getProtocolVersion() + " and serverProtocol: " + info.getServerProtocolVersion());

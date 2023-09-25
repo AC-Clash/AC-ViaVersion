@@ -57,7 +57,7 @@ public final class EntityTypeUtil {
      *
      * @param values      full enum values
      * @param typesToFill yet unfilled array to be filled with types ordered by id
-     * @param protocol    protocol to get entity types from
+     * @param mappingData mapping data to get entity types
      * @param idSetter    function to set the internal entity id
      * @param <T>         entity type
      */

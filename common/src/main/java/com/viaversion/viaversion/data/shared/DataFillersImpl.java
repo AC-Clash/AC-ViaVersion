@@ -18,26 +18,39 @@
 package com.viaversion.viaversion.data.shared;
 
 import com.google.common.base.Preconditions;
+import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.data.MappingData;
 import com.viaversion.viaversion.api.data.shared.DataFillers;
+import com.viaversion.viaversion.api.protocol.Protocol;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public final class DataFillersImpl implements DataFillers {
 
+    private static final Object LOCK = new Object(); // Prevent concurrent access with clear and client joins
+    private final Map<Class<? extends Protocol>, List<Initializer>> initializersByProtocol = new HashMap<>();
     private final Map<Class<?>, Initializer> initializers = new HashMap<>();
     private final Set<Class<?>> intents = new HashSet<>();
+    private boolean cleared;
 
     @Override
-    public void register(final Class<?> type, final MappingData mappingData, final Runnable initializer) {
-        initializers.put(type, new Initializer(mappingData, initializer));
+    public void register(final Class<?> type, final Protocol<?, ?, ?, ?> protocol, final Runnable initializer) {
+        Preconditions.checkArgument(!cleared, "Cannot register initializer after the mapping data loader has shut down. "
+                + "Consider setting ProtocolLoadingIntention to ALL in ProtocolManager instead");
+        final Initializer value = new Initializer(protocol, initializer);
+        initializers.put(type, value);
+        initializersByProtocol.computeIfAbsent(protocol.getClass(), $ -> new ArrayList<>()).add(value);
     }
 
     @Override
     public void registerIntent(final Class<?> clazz) {
-        // Initializer might not have been added yet, so we can't null check
+        Preconditions.checkArgument(!cleared, "Cannot register intention after the mapping data loader has shut down. "
+                + "Consider setting ProtocolLoadingIntention to ALL in ProtocolManager instead");
+        // Initializer might not have been added yet, so do not check for it
         intents.add(clazz);
     }
 
@@ -45,35 +58,100 @@ public final class DataFillersImpl implements DataFillers {
     public void initialize(final Class<?> clazz) {
         final Initializer initializer = initializers.get(clazz);
         Preconditions.checkNotNull(initializer, "Initializer for " + clazz + " not found");
-        initializer.loader.run();
+        initializer.run();
     }
 
     @Override
-    public synchronized void initializeRequired() {
+    public void initializeFromProtocol(final Class<? extends Protocol> clazz) {
+        final List<Initializer> initializers = initializersByProtocol.get(clazz);
+        if (initializers == null) {
+            return;
+        }
+
+        for (final Initializer initializer : initializers) {
+            initializer.run();
+        }
+    }
+
+    @Override
+    public void initializeRequired() {
+        final List<String> loadedData = new ArrayList<>();
+        final List<MappingData> loadedMappingData = new ArrayList<>();
         for (final Class<?> intent : intents) {
             final Initializer initializer = initializers.get(intent);
             if (initializer == null) {
                 throw new IllegalStateException("Initializer for " + intent.getSimpleName() + " not found");
             }
 
-            if (!initializer.mappingData.isLoaded()) {
-                initializer.mappingData.load(); // TODO DONT LOAD ALL, MAKE SURE TO CALL THIS ASYNC
-                initializer.loader.run();
-                initializer.mappingData.unload();
+            if (initializer.protocol.isRegistered()) {
+                // Registered, so its data will be already be loaded
+                continue;
             }
+
+            final MappingData mappingData = initializer.protocol.getMappingData();
+            if (!mappingData.isLoaded()) {
+                mappingData.load();
+                loadedMappingData.add(mappingData);
+            }
+
+            loadedData.add(intent.getSimpleName());
+            initializer.run();
         }
 
-        intents.clear();
-        initializers.clear();
+        if (!loadedData.isEmpty()) {
+            Via.getPlatform().getLogger().fine("Loaded additional data classes: " + String.join(", ", loadedData));
+
+            // Unload data of unregistered protocols again
+            for (final MappingData data : loadedMappingData) {
+                data.unload();
+            }
+        }
+    }
+
+    @Override
+    public boolean initializedTypesForProtocol(final Class<? extends Protocol> protocolClass) {
+        final List<Initializer> initializers;
+        synchronized (LOCK) {
+            initializers = initializersByProtocol.get(protocolClass);
+        }
+        if (initializers == null) {
+            return true;
+        }
+
+        for (final Initializer initializer : initializers) {
+            if (!initializer.ran) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public void clear() {
+        synchronized (LOCK) {
+            initializers.clear();
+            intents.clear();
+            cleared = true;
+        }
     }
 
     private static final class Initializer {
-        private final MappingData mappingData;
+        private final Protocol<?, ?, ?, ?> protocol;
         private final Runnable loader;
+        private boolean ran;
 
-        private Initializer(final MappingData mappingData, final Runnable loader) {
-            this.mappingData = mappingData;
+        private Initializer(final Protocol<?, ?, ?, ?> protocol, final Runnable loader) {
+            this.protocol = protocol;
             this.loader = loader;
+        }
+
+        public synchronized void run() {
+            if (ran) {
+                return;
+            }
+
+            loader.run();
+            ran = true;
         }
     }
 }

@@ -40,9 +40,13 @@ public enum VersionType {
      */
     ALPHA_LATER,
     /**
-     * Beta versions of Minecraft.
+     * Beta versions of Minecraft (Beta 1.0 to 1.1_02).
      */
-    BETA,
+    BETA_INITIAL,
+    /**
+     * Beta versions of Minecraft (Beta 1.2 to 1.9-pre6/1.0.0-RC2).
+     */
+    BETA_LATER,
     /**
      * Pre-netty release versions of Minecraft (1.0.0 to the 1.7.2 snapshot 13w39b).
      */
@@ -50,5 +54,11 @@ public enum VersionType {
     /**
      * Modern release versions of Minecraft (13w41a to latest).
      */
-    RELEASE
+    RELEASE,
+    /**
+     * Any version that doesn't fit in the above categories (e.g. April Fools).
+     * <p>
+     * Protocol versions using this type must override the compareTo method.
+     */
+    SPECIAL
 }

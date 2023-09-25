@@ -125,6 +125,11 @@ public abstract class AbstractProtocol<CU extends ClientboundPacketType, CM exte
         }
     }
 
+    @Override
+    public boolean isRegistered() {
+        return initialized;
+    }
+
     protected void registerConfigurationChangeHandlers() {
         // Register handlers for protocol state switching
         // Assuming ids will change too often, it is cleaner to register them here instead of the base protocols,
@@ -217,6 +222,7 @@ public abstract class AbstractProtocol<CU extends ClientboundPacketType, CM exte
     protected void onMappingDataLoaded() {
         callOnMappingDataLoaded(getEntityRewriter());
         callOnMappingDataLoaded(getItemRewriter());
+        Via.getManager().getDataFillers().initializeFromProtocol(this.getClass());
     }
 
     private void callRegister(@Nullable Rewriter<?> rewriter) {

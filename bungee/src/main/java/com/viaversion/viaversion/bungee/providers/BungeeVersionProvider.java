@@ -55,8 +55,9 @@ public class BungeeVersionProvider extends BaseVersionProvider {
         ProtocolInfo info = user.getProtocolInfo();
 
         // Bungee supports it
-        if (sorted.contains(info.getProtocolVersion()))
+        if (sorted.contains(info.getProtocolVersion())) {
             return info.getProtocolVersion();
+        }
 
         // Older than bungee supports, get the lowest version
         if (info.getProtocolVersion() < sorted.get(0)) {
@@ -68,8 +69,9 @@ public class BungeeVersionProvider extends BaseVersionProvider {
         // TODO: This needs a better fix, i.e checking ProtocolRegistry to see if it would work.
         // This is more of a workaround for snapshot support by bungee.
         for (Integer protocol : Lists.reverse(sorted)) {
-            if (info.getProtocolVersion() > protocol && ProtocolVersion.isRegistered(protocol))
+            if (info.getProtocolVersion() > protocol && ProtocolVersion.isRegistered(protocol)) {
                 return protocol;
+            }
         }
 
         Via.getPlatform().getLogger().severe("Panic, no protocol id found for " + info.getProtocolVersion());

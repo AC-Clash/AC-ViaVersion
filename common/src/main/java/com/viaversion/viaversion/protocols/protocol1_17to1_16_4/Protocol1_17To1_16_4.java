@@ -190,7 +190,7 @@ public final class Protocol1_17To1_16_4 extends AbstractProtocol<ClientboundPack
 
     @Override
     protected void registerDataInitializers(final DataFillers dataFillers) {
-        dataFillers.register(Types1_17.class, MAPPINGS, () -> Types1_17.PARTICLE.filler(MAPPINGS)
+        dataFillers.register(Types1_17.class, this, () -> Types1_17.PARTICLE.filler(MAPPINGS)
                 .reader("block", ParticleType.Readers.BLOCK)
                 .reader("dust", ParticleType.Readers.DUST)
                 .reader("falling_dust", ParticleType.Readers.BLOCK)
@@ -207,6 +207,7 @@ public final class Protocol1_17To1_16_4 extends AbstractProtocol<ClientboundPack
 
     @Override
     protected void onMappingDataLoaded() {
+        super.onMappingDataLoaded();
         tagRewriter.loadFromMappingData(); // Load filled extra tags
 
         tagRewriter.addEmptyTags(RegistryType.ITEM, "minecraft:candles", "minecraft:ignored_by_piglin_babies", "minecraft:piglin_food", "minecraft:freeze_immune_wearables",
@@ -221,8 +222,6 @@ public final class Protocol1_17To1_16_4 extends AbstractProtocol<ClientboundPack
                 "minecraft:features_cannot_replace", "minecraft:lava_pool_stone_replaceables", "minecraft:geode_invalid_blocks");
         tagRewriter.addEmptyTags(RegistryType.ENTITY, "minecraft:powder_snow_walkable_mobs", "minecraft:axolotl_always_hostiles", "minecraft:axolotl_tempted_hostiles",
                 "minecraft:axolotl_hunt_targets", "minecraft:freeze_hurts_extra_types", "minecraft:freeze_immune_entity_types");
-
-        Via.getManager().getDataFillers().initialize(Types1_17.class);
     }
 
     @Override

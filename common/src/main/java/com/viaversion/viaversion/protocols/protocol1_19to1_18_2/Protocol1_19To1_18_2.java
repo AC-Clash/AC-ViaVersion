@@ -76,12 +76,11 @@ public final class Protocol1_19To1_18_2 extends AbstractProtocol<ClientboundPack
 
     @Override
     protected void registerPackets() {
+        super.registerPackets();
+        WorldPackets.register(this);
+
         final TagRewriter<ClientboundPackets1_18> tagRewriter = new TagRewriter<>(this);
         tagRewriter.registerGeneric(ClientboundPackets1_18.TAGS);
-
-        entityRewriter.register();
-        itemRewriter.register();
-        WorldPackets.register(this);
 
         cancelClientbound(ClientboundPackets1_18.ADD_VIBRATION_SIGNAL);
 
@@ -293,7 +292,7 @@ public final class Protocol1_19To1_18_2 extends AbstractProtocol<ClientboundPack
 
     @Override
     protected void registerDataInitializers(final DataFillers dataFillers) {
-        dataFillers.register(Types1_19.class, MAPPINGS, () -> Types1_19.PARTICLE.filler(MAPPINGS)
+        dataFillers.register(Types1_19.class, this, () -> Types1_19.PARTICLE.filler(MAPPINGS)
                 .reader("block", ParticleType.Readers.BLOCK)
                 .reader("block_marker", ParticleType.Readers.BLOCK)
                 .reader("dust", ParticleType.Readers.DUST)
@@ -303,7 +302,7 @@ public final class Protocol1_19To1_18_2 extends AbstractProtocol<ClientboundPack
                 .reader("vibration", ParticleType.Readers.VIBRATION1_19)
                 .reader("sculk_charge", ParticleType.Readers.SCULK_CHARGE)
                 .reader("shriek", ParticleType.Readers.SHRIEK));
-        dataFillers.register(EntityTypes1_19.class, MAPPINGS, () -> Entity1_19Types.initialize(MAPPINGS));
+        dataFillers.register(EntityTypes1_19.class, this, () -> EntityTypes1_19.initialize(MAPPINGS));
     }
 
     @Override
@@ -311,15 +310,6 @@ public final class Protocol1_19To1_18_2 extends AbstractProtocol<ClientboundPack
         dataFillers.registerIntent(Types1_18.class);
         dataFillers.registerIntent(Types1_19.class);
         dataFillers.registerIntent(EntityTypes1_19.class);
-    }
-
-    @Override
-    protected void onMappingDataLoaded() {
-        super.onMappingDataLoaded();
-
-        final DataFillers dataFillers = Via.getManager().getDataFillers();
-        dataFillers.initialize(Types1_19.class);
-        dataFillers.initialize(EntityTypes1_19.class);
     }
 
     @Override

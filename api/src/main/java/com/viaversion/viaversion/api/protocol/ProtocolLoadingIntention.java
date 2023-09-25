@@ -31,7 +31,7 @@ import com.viaversion.viaversion.api.protocol.version.ProtocolVersion;
 public interface ProtocolLoadingIntention {
 
     /**
-     * A {@link ProtocolLoadingIntention} that loads all protocols.
+     * A protocol loading intention that loads all protocols.
      */
     ProtocolLoadingIntention ALL = ($1, $2, $3) -> true;
 

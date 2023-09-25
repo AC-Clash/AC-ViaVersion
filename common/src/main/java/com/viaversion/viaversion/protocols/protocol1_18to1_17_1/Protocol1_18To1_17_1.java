@@ -17,7 +17,6 @@
  */
 package com.viaversion.viaversion.protocols.protocol1_18to1_17_1;
 
-import com.viaversion.viaversion.api.Via;
 import com.viaversion.viaversion.api.connection.UserConnection;
 import com.viaversion.viaversion.api.data.shared.DataFillers;
 import com.viaversion.viaversion.api.minecraft.RegistryType;
@@ -87,7 +86,7 @@ public final class Protocol1_18To1_17_1 extends AbstractProtocol<ClientboundPack
 
     @Override
     protected void registerDataInitializers(final DataFillers dataFillers) {
-        dataFillers.register(Types1_18.class, MAPPINGS, () -> Types1_18.PARTICLE.filler(MAPPINGS)
+        dataFillers.register(Types1_18.class, this, () -> Types1_18.PARTICLE.filler(MAPPINGS)
                 .reader("block", ParticleType.Readers.BLOCK)
                 .reader("block_marker", ParticleType.Readers.BLOCK)
                 .reader("dust", ParticleType.Readers.DUST)
@@ -101,11 +100,6 @@ public final class Protocol1_18To1_17_1 extends AbstractProtocol<ClientboundPack
     protected void registerIntents(final DataFillers dataFillers) {
         dataFillers.registerIntent(Types1_17.class);
         dataFillers.registerIntent(Types1_18.class);
-    }
-
-    @Override
-    protected void onMappingDataLoaded() {
-        Via.getManager().getDataFillers().initialize(Types1_18.class);
     }
 
     @Override

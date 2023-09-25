@@ -56,7 +56,6 @@ import com.viaversion.viaversion.rewriter.SoundRewriter;
 import com.viaversion.viaversion.rewriter.StatisticsRewriter;
 import com.viaversion.viaversion.rewriter.TagRewriter;
 import com.viaversion.viaversion.util.Pair;
-
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
@@ -76,6 +75,8 @@ public final class Protocol1_19_3To1_19_1 extends AbstractProtocol<ClientboundPa
 
     @Override
     protected void registerPackets() {
+        super.registerPackets();
+
         final TagRewriter<ClientboundPackets1_19_1> tagRewriter = new TagRewriter<>(this);
 
         // Flint and steel was hardcoded before 1.19.3 to ignite a creeper; has been moved to a tag - adding this ensures offhand doesn't trigger as well
@@ -85,9 +86,6 @@ public final class Protocol1_19_3To1_19_1 extends AbstractProtocol<ClientboundPa
         tagRewriter.addEmptyTags(RegistryType.BLOCK, "minecraft:all_hanging_signs", "minecraft:ceiling_hanging_signs", "minecraft:invalid_spawn_inside",
                 "minecraft:stripped_logs", "minecraft:wall_hanging_signs");
         tagRewriter.registerGeneric(ClientboundPackets1_19_1.TAGS);
-
-        entityRewriter.register();
-        itemRewriter.register();
 
         final SoundRewriter<ClientboundPackets1_19_1> soundRewriter = new SoundRewriter<>(this);
         registerClientbound(ClientboundPackets1_19_1.ENTITY_SOUND, new PacketHandlers() {
@@ -359,7 +357,7 @@ public final class Protocol1_19_3To1_19_1 extends AbstractProtocol<ClientboundPa
 
     @Override
     protected void registerDataInitializers(final DataFillers dataFillers) {
-        dataFillers.register(Types1_19_3.class, MAPPINGS, () -> Types1_19_3.PARTICLE.filler(MAPPINGS)
+        dataFillers.register(Types1_19_3.class, this, () -> Types1_19_3.PARTICLE.filler(MAPPINGS)
                 .reader("block", ParticleType.Readers.BLOCK)
                 .reader("block_marker", ParticleType.Readers.BLOCK)
                 .reader("dust", ParticleType.Readers.DUST)
@@ -369,7 +367,7 @@ public final class Protocol1_19_3To1_19_1 extends AbstractProtocol<ClientboundPa
                 .reader("vibration", ParticleType.Readers.VIBRATION1_19)
                 .reader("sculk_charge", ParticleType.Readers.SCULK_CHARGE)
                 .reader("shriek", ParticleType.Readers.SHRIEK));
-        dataFillers.register(EntityTypes1_19_3.class, MAPPINGS, () -> Entity1_19_3Types.initialize(MAPPINGS));
+        dataFillers.register(EntityTypes1_19_3.class, this, () -> EntityTypes1_19_3.initialize(MAPPINGS));
     }
 
     @Override
@@ -377,15 +375,6 @@ public final class Protocol1_19_3To1_19_1 extends AbstractProtocol<ClientboundPa
         dataFillers.registerIntent(Types1_19.class);
         dataFillers.registerIntent(Types1_19_3.class);
         dataFillers.registerIntent(EntityTypes1_19_3.class);
-    }
-
-    @Override
-    protected void onMappingDataLoaded() {
-        super.onMappingDataLoaded();
-
-        final DataFillers dataFillers = Via.getManager().getDataFillers();
-        dataFillers.initialize(EntityTypes1_19_3.class);
-        dataFillers.initialize(Types1_19_3.class);
     }
 
     @Override

@@ -41,6 +41,7 @@ import com.viaversion.viaversion.debug.DebugHandlerImpl;
 import com.viaversion.viaversion.protocol.ProtocolManagerImpl;
 import com.viaversion.viaversion.protocol.ServerProtocolVersionRange;
 import com.viaversion.viaversion.protocol.ServerProtocolVersionSingleton;
+import com.viaversion.viaversion.protocols.base.BaseProtocol;
 import com.viaversion.viaversion.protocols.protocol1_13to1_12_2.TabCompleteThread;
 import com.viaversion.viaversion.protocols.protocol1_9to1_8.ViaIdleThread;
 import com.viaversion.viaversion.scheduler.TaskScheduler;
@@ -116,7 +117,8 @@ public class ViaManagerImpl implements ViaManager {
         enableListeners = null;
 
         // All protocols should have been registered by now, so initialize the required data filters
-        dataFillers.initializeRequired(); // TODO ASYNC
+        // that weren't loaded due to a custom protocol loading intention not requiring them
+        protocolManager.addMappingLoaderFuture(BaseProtocol.class, dataFillers::initializeRequired);
 
         initialized = true;
     }
